@@ -3,7 +3,7 @@
 
 <div class="container-toc"></div>
 
-## Bei Twenga.com registrieren
+## Bei Kelkoo registrieren
 
 Kelkoo ist eine Preisvergleich-Suchmaschine für Shopping und Reisen. Die Basis-Partnerschaft bietet die Möglichkeit, die Produktlistung eigenständig zu gestalten und zu verwalten. Klicks werden per Prepaid-Guthaben bezahlt.
 
