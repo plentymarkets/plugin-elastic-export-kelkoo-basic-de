@@ -1,0 +1,24 @@
+{
+  "name": "ElasticExportKelkooBasicDE",
+  "description": "This plugin adds the format KelkooBasicDE to the Elastic Export.",
+  "namespace": "ElasticExportKelkooBasicDE",
+  "author": "plentymarkets GmbH",
+  "type": "export",
+  "authorIcon": "icon_author_xs.png",
+  "serviceProvider": "ElasticExportKelkooBasicDE\\ElasticExportKelkooBasicDEServiceProvider",
+  "license": "GNU AFFERO GENERAL PUBLIC LICENSE Version 3, 19 November 2007",
+  "pluginIcon": "icon_plugin_md.png",
+  "price": 0.00,
+  "shortDescription": {
+    "de": "Das Plugin ElasticExportKelkooBasicDE fügt das Datenformat KelkooBasicDE zum Elastischen Export hinzu.",
+    "en": "This plugin adds the format KelkooBasicDE to the Elastic Export."
+  },
+  "categories": [
+    "3523"
+  ],
+  "version": "1.0.0",
+  "marketplaceName": {
+    "de": "KelkooBasic",
+    "en": "KelkooBasic"
+  }
+}
