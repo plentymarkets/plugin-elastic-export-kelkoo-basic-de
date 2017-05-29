@@ -1,5 +1,10 @@
 # Release Notes für Elastic Export kelkoo.de
 
+## v1.0.2 (2017-05-29)
+
+### Geändert
+- Das Plugin Elastic Export ist nun Voraussetzung zur Nutzung des Pluginformats KelkooBasicDE.
+
 ## v1.0.1 (2017-03-22)
 
 ### Behoben
