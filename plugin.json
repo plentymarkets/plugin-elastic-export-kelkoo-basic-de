@@ -17,7 +17,7 @@
     "3523"
   ],
   "version": "1.0.2",
-  "dependencies": {
+  "require": {
     "ElasticExport": ">=1.0.18"
   },
   "marketplaceName": {
