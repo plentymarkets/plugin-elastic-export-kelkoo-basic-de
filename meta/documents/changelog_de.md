@@ -3,7 +3,7 @@
 ## v1.0.3 (2017-06-26)
 
 ### Geändert
-- Die Logik des Exports wurde angepasst, um die Performance und Stabilität zu verbessern.
+- Die Logik des Generators wurde angepasst, um die Performance und Stabilität zu verbessern.
 
 ## v1.0.2 (2017-05-29)
 

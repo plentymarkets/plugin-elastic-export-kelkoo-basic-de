@@ -61,7 +61,7 @@ class KelkooBasicDE extends CSVPluginGenerator
     protected function generatePluginContent($elasticSearch, array $formatSettings = [], array $filter = [])
     {
         $this->elasticExportHelper = pluginApp(ElasticExportCoreHelper::class);
-        $this->elasticExportStockHelper = pluginApp(ElasticExportCoreHelper::class);
+        $this->elasticExportStockHelper = pluginApp(ElasticExportStockHelper::class);
         $this->elasticExportPriceHelper = pluginApp(ElasticExportPriceHelper::class);
 
 		$settings = $this->arrayHelper->buildMapFromObjectList($formatSettings, 'key', 'value');
@@ -140,6 +140,12 @@ class KelkooBasicDE extends CSVPluginGenerator
 						]);
 
 						$lines++;
+
+						if($lines == $filter['limit'])
+						{
+							$limitReached = true;
+							break;
+						}
 					}
 				}
 			}
@@ -168,17 +174,19 @@ class KelkooBasicDE extends CSVPluginGenerator
 			$deliveryCost = '';
 		}
 
+		$priceList = $this->elasticExportPriceHelper->getPriceList($item, $settings, 2, '.');
+
 		$data = [
 			'url' 		    => $this->elasticExportHelper->getUrl($item, $settings, true, false),
 			'title' 		=> $this->elasticExportHelper->getName($item, $settings, 80),
 			'description'   => $this->elasticExportHelper->getDescription($item, $settings, 160),
-			'price' 	    => number_format((float)$this->idlVariations[$item['id']]['variationRetailPrice.price'], 2, ',', ''),
+			'price' 	    => $priceList['price'],
 			'offerid'       => $item['id'],
 			'image'		    => $this->elasticExportHelper->getMainImage($item, $settings),
 			'availability'  => $this->elasticExportHelper->getAvailability($item, $settings, false),
 			'deliverycost' 	=> $deliveryCost,
 			'deliveryTime' 	=> $this->elasticExportHelper->getAvailability($item, $settings),
-			'unitaryPrice'  => $this->elasticExportHelper->getBasePrice($item, $this->idlVariations[$item['id']]),
+			'unitaryPrice'  => $this->elasticExportPriceHelper->getBasePrice($item),
 			'ean'           => $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'ecotax'        => ''
 		];
