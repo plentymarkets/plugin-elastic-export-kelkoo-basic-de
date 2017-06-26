@@ -16,10 +16,8 @@
   "categories": [
     "3523"
   ],
-  "version": "1.0.2",
-  "require": {
-    "ElasticExport": ">=1.0.18"
-  },
+  "version": "1.0.3",
+  "require": ["ElasticExport"],
   "marketplaceName": {
     "de": "KelkooBasic",
     "en": "KelkooBasic"
