@@ -186,7 +186,7 @@ class KelkooBasicDE extends CSVPluginGenerator
 			'availability'  => $this->elasticExportHelper->getAvailability($item, $settings, false),
 			'deliverycost' 	=> $deliveryCost,
 			'deliveryTime' 	=> $this->elasticExportHelper->getAvailability($item, $settings),
-			'unitaryPrice'  => $this->elasticExportPriceHelper->getBasePrice($item),
+			'unitaryPrice'  => $this->elasticExportPriceHelper->getBasePrice($item, $priceList['price']),
 			'ean'           => $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
 			'ecotax'        => ''
 		];
