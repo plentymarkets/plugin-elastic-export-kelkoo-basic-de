@@ -3,19 +3,40 @@
 namespace ElasticExportKelkooBasicDE\Generator;
 
 use ElasticExport\Helper\ElasticExportCoreHelper;
+use ElasticExport\Helper\ElasticExportPriceHelper;
+use ElasticExport\Helper\ElasticExportStockHelper;
 use Plenty\Modules\DataExchange\Contracts\CSVPluginGenerator;
 use Plenty\Modules\Helper\Services\ArrayHelper;
 use Plenty\Modules\Item\DataLayer\Models\Record;
 use Plenty\Modules\Item\DataLayer\Models\RecordList;
 use Plenty\Modules\DataExchange\Models\FormatSetting;
 use Plenty\Modules\Helper\Models\KeyValue;
+use Plenty\Modules\Item\Search\Contracts\VariationElasticSearchScrollRepositoryContract;
+use Plenty\Plugin\Log\Loggable;
 
+/**
+ * Class KelkooBasicDE
+ *
+ * @package ElasticExportKelkooBasicDE\Generator
+ */
 class KelkooBasicDE extends CSVPluginGenerator
 {
+	use Loggable;
+
     /**
      * @var ElasticExportCoreHelper $elasticExportHelper
      */
     private $elasticExportHelper;
+
+	/**
+	 * @var ElasticExportStockHelper $elasticExportStockHelper
+	 */
+    private $elasticExportStockHelper;
+
+	/**
+	 * @var ElasticExportPriceHelper $elasticExportPriceHelper
+	 */
+    private $elasticExportPriceHelper;
 
     /**
      * @var ArrayHelper $arrayHelper
@@ -23,12 +44,8 @@ class KelkooBasicDE extends CSVPluginGenerator
     private $arrayHelper;
 
     /**
-     * @var array $idlVariations
-     */
-    private $idlVariations = array();
-
-    /**
      * KelkooBasicDE constructor.
+	 *
      * @param ArrayHelper $arrayHelper
      */
     public function __construct(ArrayHelper $arrayHelper)
@@ -37,109 +54,143 @@ class KelkooBasicDE extends CSVPluginGenerator
     }
 
     /**
-     * @param array $resultData
+     * @param VariationElasticSearchScrollRepositoryContract $elasticSearch
      * @param array $formatSettings
      * @param array $filter
      */
-    protected function generatePluginContent($resultData, array $formatSettings = [], array $filter = [])
+    protected function generatePluginContent($elasticSearch, array $formatSettings = [], array $filter = [])
     {
         $this->elasticExportHelper = pluginApp(ElasticExportCoreHelper::class);
-        if(is_array($resultData['documents']) && count($resultData['documents']) > 0)
-        {
-            $settings = $this->arrayHelper->buildMapFromObjectList($formatSettings, 'key', 'value');
+        $this->elasticExportStockHelper = pluginApp(ElasticExportStockHelper::class);
+        $this->elasticExportPriceHelper = pluginApp(ElasticExportPriceHelper::class);
 
-            $this->setDelimiter(" ");
+		$settings = $this->arrayHelper->buildMapFromObjectList($formatSettings, 'key', 'value');
+		$this->setDelimiter(" ");
 
-            $this->addCSVContent([
-                'url',
-                'title',
-                'description',
-                'price',
-                'offerid',
-                'image',
-                'availability',
-                'deliverycost',
-                'deliveryTime',
-                'unitaryPrice',
-                'ean',
-                'ecotax',
+		$this->addCSVContent([
+			'url',
+			'title',
+			'description',
+			'price',
+			'offerid',
+			'image',
+			'availability',
+			'deliverycost',
+			'deliveryTime',
+			'unitaryPrice',
+			'ean',
+			'ecotax',
+		]);
 
-            ]);
+        $limitReached = false;
+        $lines = 0;
+        $startTime = microtime(true);
 
-            //Create a List of all VariationIds
-            $variationIdList = array();
-            foreach($resultData['documents'] as $variation)
-            {
-                $variationIdList[] = $variation['id'];
-            }
+        if($elasticSearch instanceof VariationElasticSearchScrollRepositoryContract)
+		{
+			do
+			{
+				if($limitReached === true)
+				{
+					break;
+				}
 
-            //Get the missing fields in ES from IDL
-            if(is_array($variationIdList) && count($variationIdList) > 0)
-            {
-                /**
-                 * @var \ElasticExportKelkooBasicDE\IDL_ResultList\KelkooBasicDE $idlResultList
-                 */
-                $idlResultList = pluginApp(\ElasticExportKelkooBasicDE\IDL_ResultList\KelkooBasicDE::class);
-                $idlResultList = $idlResultList->getResultList($variationIdList, $settings);
-            }
+				$this->getLogger(__METHOD__)->debug('ElasticExportKelkooBasicDE::log.writtenlines', ['lines written' => $lines]);
 
-            //Creates an array with the variationId as key to surpass the sorting problem
-            if(isset($idlResultList) && $idlResultList instanceof RecordList)
-            {
-                $this->createIdlArray($idlResultList);
-            }
+				$esStartTime = microtime(true);
 
-            foreach($resultData['documents'] as $item)
-            {
-                $deliveryCost = $this->elasticExportHelper->getShippingCost($item['data']['item']['id'], $settings);
+				$resultList = $elasticSearch->execute();
 
-                if(!is_null($deliveryCost))
-                {
-                    $deliveryCost = number_format((float)$deliveryCost, 2, ',', '');
-                }
-                else
-                {
-                    $deliveryCost = '';
-                }
+				$this->getLogger(__METHOD__)->debug('ElasticExportKelkooBasicDE::log.esDuration', [
+					'Elastic Search duration' => microtime(true) - $esStartTime,
+				]);
 
-                $data = [
-                    'url' 		    => $this->elasticExportHelper->getUrl($item, $settings, true, false),
-                    'title' 		=> $this->elasticExportHelper->getName($item, $settings, 80),
-                    'description'   => $this->elasticExportHelper->getDescription($item, $settings, 160),
-                    'price' 	    => number_format((float)$this->idlVariations[$item['id']]['variationRetailPrice.price'], 2, ',', ''),
-                    'offerid'       => $item['id'],
-                    'image'		    => $this->elasticExportHelper->getMainImage($item, $settings),
-                    'availability'  => $this->elasticExportHelper->getAvailability($item, $settings, false),
-                    'deliverycost' 	=> $deliveryCost,
-                    'deliveryTime' 	=> $this->elasticExportHelper->getAvailability($item, $settings),
-                    'unitaryPrice'  => $this->elasticExportHelper->getBasePrice($item, $this->idlVariations[$item['id']]),
-                    'ean'           => $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
-                    'ecotax'        => ''
-                ];
+				if(count($resultList['error']) > 0)
+				{
+					$this->getLogger(__METHOD__)->error('ElasticExportKelkooBasicDE::log.occurredElasticSearchErrors', [
+						'error message' => $resultList['error'],
+					]);
+				}
 
-                $this->addCSVContent(array_values($data));
-            }
-        }
+				$buildRowStartTime = microtime(true);
+
+				if(is_array($resultList['documents']) && count($resultList['documents']) > 0)
+				{
+					foreach($resultList['documents'] as $item)
+					{
+						if($this->elasticExportStockHelper->isFilteredByStock($item, $filter))
+						{
+							continue;
+						}
+
+						try
+						{
+							$this->buildRow($item, $settings);
+							$lines++;
+						}
+						catch(\Throwable $exception)
+						{
+							$this->getLogger(__METHOD__)->error('ElasticExportKelkooBasicDE::log.buildRowError', [
+								'error' => $exception->getMessage(),
+								'line' => $exception->getLine(),
+								'variation ID' => $item['id']
+							]);
+						}
+
+						$this->getLogger(__METHOD__)->debug('ElasticExportKelkooBasicDE::log.buildRowDuration', [
+							'Build Row duration' => microtime(true) - $buildRowStartTime,
+						]);
+
+						if($lines == $filter['limit'])
+						{
+							$limitReached = true;
+							break;
+						}
+					}
+				}
+			}
+			while($elasticSearch->hasNext());
+		}
+
+		$this->getLogger(__METHOD__)->debug('ElasticExportKelkooBasicDE::log.fileGenerationDuration', [
+			'Whole file generation duration' => microtime(true) - $startTime,
+		]);
     }
 
-    /**
-     * @param RecordList $idlResultList
-     */
-    private function createIdlArray($idlResultList)
-    {
-        if($idlResultList instanceof RecordList)
-        {
-            foreach($idlResultList as $idlVariation)
-            {
-                if($idlVariation instanceof Record)
-                {
-                    $this->idlVariations[$idlVariation->variationBase->id] = [
-                        'itemBase.id' => $idlVariation->itemBase->id,
-                        'variationBase.id' => $idlVariation->variationBase->id,
-                        'variationRetailPrice.price' => $idlVariation->variationRetailPrice->price,
-                    ];
-                }
-            }
-        }
-    }
+	/**
+	 * @var array $item
+	 * @var KeyValue $settings
+	 */
+    private function buildRow($item, $settings)
+	{
+		$deliveryCost = $this->elasticExportHelper->getShippingCost($item['data']['item']['id'], $settings);
+
+		if(!is_null($deliveryCost))
+		{
+			$deliveryCost = number_format((float)$deliveryCost, 2, ',', '');
+		}
+		else
+		{
+			$deliveryCost = '';
+		}
+
+		$priceList = $this->elasticExportPriceHelper->getPriceList($item, $settings, 2, '.');
+
+		$data = [
+			'url' 		    => $this->elasticExportHelper->getUrl($item, $settings, true, false),
+			'title' 		=> $this->elasticExportHelper->getName($item, $settings, 80),
+			'description'   => $this->elasticExportHelper->getDescription($item, $settings, 160),
+			'price' 	    => $priceList['price'],
+			'offerid'       => $item['id'],
+			'image'		    => $this->elasticExportHelper->getMainImage($item, $settings),
+			'availability'  => $this->elasticExportHelper->getAvailability($item, $settings, false),
+			'deliverycost' 	=> $deliveryCost,
+			'deliveryTime' 	=> $this->elasticExportHelper->getAvailability($item, $settings),
+			'unitaryPrice'  => $this->elasticExportPriceHelper->getBasePrice($item, $priceList['price']),
+			'ean'           => $this->elasticExportHelper->getBarcodeByType($item, $settings->get('barcode')),
+			'ecotax'        => ''
+		];
+
+		$this->addCSVContent(array_values($data));
+	}
 }

@@ -8,6 +8,7 @@ use Plenty\Modules\Helper\Services\ArrayHelper;
 use Plenty\Modules\Item\Search\Mutators\ImageMutator;
 use Plenty\Modules\Cloud\ElasticSearch\Lib\Source\Mutator\BuiltIn\LanguageMutator;
 use Plenty\Modules\Item\Search\Mutators\DefaultCategoryMutator;
+use Plenty\Modules\Item\Search\Mutators\KeyMutator;
 
 
 class KelkooBasicDE extends ResultFields
@@ -57,8 +58,7 @@ class KelkooBasicDE extends ResultFields
                 break;
         }
 
-        if($settings->get('descriptionType') == 'itemShortDescription'
-            || $settings->get('previewTextType') == 'itemShortDescription')
+        if($settings->get('descriptionType') == 'itemShortDescription' || $settings->get('previewTextType') == 'itemShortDescription')
         {
             $itemDescriptionFields[] = 'texts.shortDescription';
         }
@@ -70,25 +70,43 @@ class KelkooBasicDE extends ResultFields
         {
             $itemDescriptionFields[] = 'texts.description';
         }
-        $itemDescriptionFields[] = 'texts.technicalData';
 
-        //Mutator
+        $itemDescriptionFields[] = 'texts.technicalData';
+        $itemDescriptionFields[] = 'texts.lang';
+
+        // Mutator
+
+		/**
+		 * @var KeyMutator $keyMutator
+		 */
+		$keyMutator = pluginApp(KeyMutator::class);
+
+		if($keyMutator instanceof KeyMutator)
+		{
+			$keyMutator->setKeyList($this->getKeyList());
+			$keyMutator->setNestedKeyList($this->getNestedKeyList());
+		}
+
         /**
          * @var ImageMutator $imageMutator
          */
         $imageMutator = pluginApp(ImageMutator::class);
+
         if($imageMutator instanceof ImageMutator)
         {
             $imageMutator->addMarket($reference);
         }
+
         /**
          * @var LanguageMutator $languageMutator
          */
         $languageMutator = pluginApp(LanguageMutator::class, [[$settings->get('lang')]]);
+
         /**
          * @var DefaultCategoryMutator $defaultCategoryMutator
          */
         $defaultCategoryMutator = pluginApp(DefaultCategoryMutator::class);
+
         if($defaultCategoryMutator instanceof DefaultCategoryMutator)
         {
             $defaultCategoryMutator->setPlentyId($settings->get('plentyId'));
@@ -136,8 +154,8 @@ class KelkooBasicDE extends ResultFields
                 //attributes
                 'attributes.attributeValueSetId',
             ],
-
             [
+            	$keyMutator,
                 $languageMutator,
                 $defaultCategoryMutator
             ],
@@ -155,4 +173,96 @@ class KelkooBasicDE extends ResultFields
 
         return $fields;
     }
+
+	private function getKeyList()
+	{
+		$keyList = [
+			//item
+			'item.id',
+			'item.manufacturer.id',
+			'item.rakutenCategoryId',
+
+			//variation
+			'variation.availability.id',
+			'variation.stockLimitation',
+			'variation.vatId',
+			'variation.model',
+			'variation.isMain',
+			'variation.id',
+
+			//unit
+			'unit.content',
+			'unit.id',
+		];
+
+		return $keyList;
+	}
+
+	private function getNestedKeyList()
+	{
+		$nestedKeyList['keys'] = [
+			//images
+			'images.all',
+
+			//sku
+			'skus',
+
+			//texts
+			'texts',
+
+			//defaultCategories
+			'defaultCategories',
+
+			//barcodes
+			'barcodes',
+
+			//attributes
+			'attributes',
+		];
+
+		$nestedKeyList['nestedKeys'] = [
+			'images.all' => [
+				'urlMiddle',
+				'urlPreview',
+				'urlSecondPreview',
+				'url',
+				'path',
+				'position',
+			],
+
+			'skus' => [
+				'sku'
+			],
+
+			'texts'  => [
+				'description',
+				'lang',
+				'name1',
+				'name2',
+				'name3',
+				'shortDescription',
+				'technicalData',
+				'urlPath',
+			],
+
+			'defaultCategories' => [
+				'id'
+			],
+
+			'barcodes'  => [
+				'code',
+				'type',
+			],
+
+			'attributes'   => [
+				'attributeValueSetId',
+			],
+
+			'properties'    => [
+				'property.id',
+			]
+		];
+
+		return $nestedKeyList;
+	}
 }

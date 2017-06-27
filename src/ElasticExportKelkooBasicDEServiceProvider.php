@@ -18,7 +18,8 @@ class ElasticExportKelkooBasicDEServiceProvider extends DataExchangeServiceProvi
             'ElasticExportKelkooBasicDE\ResultField\KelkooBasicDE',
             'ElasticExportKelkooBasicDE\Generator\KelkooBasicDE',
             '',
-            true
+            true,
+			true
         );
     }
 }
