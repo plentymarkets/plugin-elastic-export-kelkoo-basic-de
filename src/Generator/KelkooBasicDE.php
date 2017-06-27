@@ -126,20 +126,20 @@ class KelkooBasicDE extends CSVPluginGenerator
 						try
 						{
 							$this->buildRow($item, $settings);
+							$lines++;
 						}
 						catch(\Throwable $exception)
 						{
 							$this->getLogger(__METHOD__)->error('ElasticExportKelkooBasicDE::log.buildRowError', [
 								'error' => $exception->getMessage(),
-								'line' => $exception->getLine()
+								'line' => $exception->getLine(),
+								'variation ID' => $item['id']
 							]);
 						}
 
 						$this->getLogger(__METHOD__)->debug('ElasticExportKelkooBasicDE::log.buildRowDuration', [
 							'Build Row duration' => microtime(true) - $buildRowStartTime,
 						]);
-
-						$lines++;
 
 						if($lines == $filter['limit'])
 						{
