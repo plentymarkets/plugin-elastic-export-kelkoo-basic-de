@@ -72,6 +72,7 @@ class KelkooBasicDE extends ResultFields
         }
 
         $itemDescriptionFields[] = 'texts.technicalData';
+        $itemDescriptionFields[] = 'texts.lang';
 
         // Mutator
 
@@ -234,13 +235,14 @@ class KelkooBasicDE extends ResultFields
 			],
 
 			'texts'  => [
-				'urlPath',
+				'description',
+				'lang',
 				'name1',
 				'name2',
 				'name3',
 				'shortDescription',
-				'description',
 				'technicalData',
+				'urlPath',
 			],
 
 			'defaultCategories' => [
