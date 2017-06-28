@@ -1,5 +1,11 @@
 # Release Notes für Elastic Export kelkoo.de
 
+## v1.0.4 (2017-06-28)
+
+### Behoben
+- Es werden nur noch Barcodes für den Export verwendet, die mit der konfigurierten Herkunft verknüpft sind.
+- Texte werden nun in der konfigurierten Sprache exportiert.
+
 ## v1.0.3 (2017-06-27)
 
 ### Geändert

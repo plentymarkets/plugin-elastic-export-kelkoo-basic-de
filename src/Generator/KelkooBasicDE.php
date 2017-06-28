@@ -177,9 +177,9 @@ class KelkooBasicDE extends CSVPluginGenerator
 		$priceList = $this->elasticExportPriceHelper->getPriceList($item, $settings, 2, '.');
 
 		$data = [
-			'url' 		    => $this->elasticExportHelper->getUrl($item, $settings, true, false),
-			'title' 		=> $this->elasticExportHelper->getName($item, $settings, 80),
-			'description'   => $this->elasticExportHelper->getDescription($item, $settings, 160),
+			'url' 		    => $this->elasticExportHelper->getMutatedUrl($item, $settings, true, false),
+			'title' 		=> $this->elasticExportHelper->getMutatedName($item, $settings, 80),
+			'description'   => $this->elasticExportHelper->getMutatedDescription($item, $settings, 160),
 			'price' 	    => $priceList['price'],
 			'offerid'       => $item['id'],
 			'image'		    => $this->elasticExportHelper->getMainImage($item, $settings),
