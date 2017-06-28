@@ -1,5 +1,11 @@
 # Release Notes for Elastic Export kelkoo.de
 
+## v1.0.4 (2017-06-28)
+
+### Fixed
+- Only barcodes will be exported, which are linked to the configured referrer.
+- Texts will now be exported in the configured language.
+
 ## v1.0.3 (2017-06-27)
 
 ### Changed

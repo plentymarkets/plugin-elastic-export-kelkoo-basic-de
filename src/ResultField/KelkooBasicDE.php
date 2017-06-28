@@ -5,6 +5,7 @@ namespace ElasticExportKelkooBasicDE\ResultField;
 use Plenty\Modules\DataExchange\Contracts\ResultFields;
 use Plenty\Modules\DataExchange\Models\FormatSetting;
 use Plenty\Modules\Helper\Services\ArrayHelper;
+use Plenty\Modules\Item\Search\Mutators\BarcodeMutator;
 use Plenty\Modules\Item\Search\Mutators\ImageMutator;
 use Plenty\Modules\Cloud\ElasticSearch\Lib\Source\Mutator\BuiltIn\LanguageMutator;
 use Plenty\Modules\Item\Search\Mutators\DefaultCategoryMutator;
@@ -97,6 +98,16 @@ class KelkooBasicDE extends ResultFields
             $imageMutator->addMarket($reference);
         }
 
+		/**
+		 * @var BarcodeMutator $barcodeMutator
+		 */
+		$barcodeMutator = pluginApp(BarcodeMutator::class);
+
+		if($barcodeMutator instanceof BarcodeMutator)
+		{
+			$barcodeMutator->addMarket($reference);
+		}
+
         /**
          * @var LanguageMutator $languageMutator
          */
@@ -157,7 +168,8 @@ class KelkooBasicDE extends ResultFields
             [
             	$keyMutator,
                 $languageMutator,
-                $defaultCategoryMutator
+                $defaultCategoryMutator,
+				$barcodeMutator
             ],
         ];
 
@@ -174,6 +186,9 @@ class KelkooBasicDE extends ResultFields
         return $fields;
     }
 
+	/**
+	 * @return array
+	 */
 	private function getKeyList()
 	{
 		$keyList = [
@@ -198,6 +213,9 @@ class KelkooBasicDE extends ResultFields
 		return $keyList;
 	}
 
+	/**
+	 * @return array
+	 */
 	private function getNestedKeyList()
 	{
 		$nestedKeyList['keys'] = [
